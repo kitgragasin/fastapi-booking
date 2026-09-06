@@ -27,6 +27,8 @@ Acceptance criteria:
 
 ## Step 2: CRUD API
 
+Status: complete.
+
 Deliverables:
 
 - Create address endpoints.
@@ -37,6 +39,11 @@ Acceptance criteria:
 
 - Users can manage addresses through FastAPI Swagger.
 - The API returns clear validation and not-found errors.
+
+Notes:
+
+- CRUD routes are implemented with a repository and service layer.
+- The API is covered by a temporary SQLite integration test.
 
 ## Step 3: Nearby Search
 
