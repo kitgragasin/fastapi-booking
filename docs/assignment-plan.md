@@ -44,6 +44,7 @@ Notes:
 
 - CRUD routes are implemented with a repository and service layer.
 - The API is covered by a temporary SQLite integration test.
+- A first-run bootstrap command seeds a starter SQLite database for new users and test runs.
 
 ## Step 3: Nearby Search
 
