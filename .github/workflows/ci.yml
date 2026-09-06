@@ -8,7 +8,11 @@ on:
 
 jobs:
   checks:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
 
     steps:
       - name: Checkout
@@ -19,6 +23,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run checks
+      - name: Make Unix scripts executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./run-unit-tests ./run-checks ./init-db
+
+      - name: Run checks (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: .\run-checks.cmd
+
+      - name: Run checks (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./run-checks

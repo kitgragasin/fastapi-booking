@@ -2,9 +2,20 @@
 
 ## Run
 
+### Windows (PowerShell)
+
 ```bash
 py -m venv .venv
 .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+### Unix (bash/zsh)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
@@ -34,6 +45,8 @@ GET /addresses/nearby?latitude=16.4023&longitude=120.5960&distance_km=5
 
 ## Checks
 
+### Cross-platform wrappers
+
 ```bash
 ./run-unit-tests
 ./run-checks
@@ -43,3 +56,11 @@ GET /addresses/nearby?latitude=16.4023&longitude=120.5960&distance_km=5
 `run-unit-tests` runs the test suite only.
 `run-checks` installs requirements and then runs the test suite.
 `init-db` creates the SQLite database and seeds a few starter addresses.
+
+### Windows-specific wrappers
+
+```bash
+.\run-unit-tests.cmd
+.\run-checks.cmd
+.\init-db.cmd
+```
