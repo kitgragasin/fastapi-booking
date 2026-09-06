@@ -1,11 +1,11 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
-from app.schemas.address import AddressCreate, AddressRead, AddressUpdate
-from app.services.address_service import AddressService
+from app.schemas.address import AddressCreate, AddressRead, AddressUpdate, NearbyAddressRead
+from app.services.address_service import AddressService, NearbyAddress
 
 router = APIRouter(prefix="/addresses", tags=["addresses"])
 logger = logging.getLogger(__name__)
@@ -19,6 +19,30 @@ def get_address_service(db: Session = Depends(get_db)) -> AddressService:
 def list_addresses(service: AddressService = Depends(get_address_service)):
     logger.debug("Listing addresses")
     return service.list_addresses()
+
+
+@router.get("/nearby", response_model=list[NearbyAddressRead])
+def list_addresses_nearby(
+    latitude: float = Query(ge=-90, le=90),
+    longitude: float = Query(ge=-180, le=180),
+    distance_km: float = Query(gt=0),
+    service: AddressService = Depends(get_address_service),
+):
+    results = service.find_addresses_within_distance(
+        latitude=latitude,
+        longitude=longitude,
+        distance_km=distance_km,
+    )
+    logger.info(
+        "Nearby address search completed",
+        extra={
+            "latitude": latitude,
+            "longitude": longitude,
+            "distance_km": distance_km,
+            "result_count": len(results),
+        },
+    )
+    return [_to_nearby_address_read(result) for result in results]
 
 
 @router.get("/{address_id}", response_model=AddressRead)
@@ -60,3 +84,17 @@ def delete_address(address_id: int, service: AddressService = Depends(get_addres
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found")
     logger.info("Deleted address", extra={"address_id": address_id})
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _to_nearby_address_read(result: NearbyAddress) -> NearbyAddressRead:
+    return NearbyAddressRead(
+        id=result.address.id,
+        street=result.address.street,
+        city=result.address.city,
+        state=result.address.state,
+        postal_code=result.address.postal_code,
+        country=result.address.country,
+        latitude=result.address.latitude,
+        longitude=result.address.longitude,
+        distance_km=round(result.distance_km, 3),
+    )

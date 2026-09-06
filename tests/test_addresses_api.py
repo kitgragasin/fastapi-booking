@@ -85,3 +85,60 @@ def test_create_list_get_update_and_delete_address(client: TestClient, address_p
 
     assert missing_response.status_code == 404
     assert missing_response.json()["detail"] == "Address not found"
+
+
+def test_nearby_search_returns_addresses_within_radius_sorted_by_distance(client: TestClient) -> None:
+    client.post(
+        "/addresses",
+        json={
+            "street": "Makati Avenue",
+            "city": "Makati",
+            "state": "Metro Manila",
+            "postal_code": "1200",
+            "country": "Philippines",
+            "latitude": 14.5547,
+            "longitude": 121.0244,
+        },
+    )
+    client.post(
+        "/addresses",
+        json={
+            "street": "Session Road",
+            "city": "Baguio",
+            "state": "Benguet",
+            "postal_code": "2600",
+            "country": "Philippines",
+            "latitude": 16.4023,
+            "longitude": 120.5960,
+        },
+    )
+    client.post(
+        "/addresses",
+        json={
+            "street": "Cebu IT Park",
+            "city": "Cebu City",
+            "state": "Cebu",
+            "postal_code": "6000",
+            "country": "Philippines",
+            "latitude": 10.3289,
+            "longitude": 123.9018,
+        },
+    )
+
+    response = client.get(
+        "/addresses/nearby",
+        params={"latitude": 14.5995, "longitude": 120.9842, "distance_km": 300},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [item["city"] for item in body] == ["Makati", "Baguio"]
+    assert body[0]["distance_km"] <= body[1]["distance_km"]
+
+    small_radius = client.get(
+        "/addresses/nearby",
+        params={"latitude": 14.5995, "longitude": 120.9842, "distance_km": 50},
+    )
+
+    assert small_radius.status_code == 200
+    assert [item["city"] for item in small_radius.json()] == ["Makati"]

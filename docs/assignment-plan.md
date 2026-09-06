@@ -48,6 +48,8 @@ Notes:
 
 ## Step 3: Nearby Search
 
+Status: complete.
+
 Deliverables:
 
 - Add an endpoint for addresses within a given radius of coordinates.
@@ -57,6 +59,11 @@ Acceptance criteria:
 
 - Users can search by latitude, longitude, and distance.
 - Results only include addresses within the requested radius.
+
+Notes:
+
+- Nearby search is available through `GET /addresses/nearby`.
+- Distance calculation uses a dedicated Haversine service and returns results sorted by nearest first.
 
 ## Step 4: Hardening
 

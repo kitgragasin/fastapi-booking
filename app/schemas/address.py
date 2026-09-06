@@ -29,3 +29,7 @@ class AddressRead(AddressBase):
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class NearbyAddressRead(AddressRead):
+    distance_km: float = Field(ge=0)
