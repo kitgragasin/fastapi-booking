@@ -1,5 +1,10 @@
+import logging
+
 from app.db.session import Base, SessionLocal, engine
 from app.models.address import Address
+
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_ADDRESSES: list[dict[str, object]] = [
@@ -48,14 +53,23 @@ def initialize_database(reset: bool = False) -> int:
     db = SessionLocal()
     try:
         if reset:
+            logger.info("Resetting seeded database contents")
             db.query(Address).delete()
             db.commit()
 
         if db.query(Address).count() > 0:
+            logger.info("Seed skipped because database already contains addresses")
             return 0
 
         db.add_all(Address(**address) for address in DEFAULT_ADDRESSES)
-        db.commit()
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception("Failed to seed starter addresses")
+            raise
+
+        logger.info("Seeded starter addresses", extra={"count": len(DEFAULT_ADDRESSES)})
         return len(DEFAULT_ADDRESSES)
     finally:
         db.close()
