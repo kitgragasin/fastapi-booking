@@ -142,3 +142,66 @@ def test_nearby_search_returns_addresses_within_radius_sorted_by_distance(client
 
     assert small_radius.status_code == 200
     assert [item["city"] for item in small_radius.json()] == ["Makati"]
+
+
+def test_update_missing_address_returns_404(client: TestClient) -> None:
+    response = client.patch(
+        "/addresses/9999",
+        json={"city": "Quezon City"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Address not found"
+
+
+def test_delete_missing_address_returns_404(client: TestClient) -> None:
+    response = client.delete("/addresses/9999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Address not found"
+
+
+def test_create_address_rejects_invalid_payload(client: TestClient, address_payload: dict[str, object]) -> None:
+    invalid_payload = dict(address_payload)
+    invalid_payload["latitude"] = 120
+
+    response = client.post("/addresses", json=invalid_payload)
+
+    assert response.status_code == 422
+
+
+def test_nearby_search_returns_empty_list_when_no_matches(client: TestClient) -> None:
+    client.post(
+        "/addresses",
+        json={
+            "street": "Session Road",
+            "city": "Baguio",
+            "state": "Benguet",
+            "postal_code": "2600",
+            "country": "Philippines",
+            "latitude": 16.4023,
+            "longitude": 120.5960,
+        },
+    )
+
+    response = client.get(
+        "/addresses/nearby",
+        params={"latitude": 7.0731, "longitude": 125.6128, "distance_km": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"latitude": 95, "longitude": 120.9842, "distance_km": 5},
+        {"latitude": 14.5547, "longitude": 200, "distance_km": 5},
+        {"latitude": 14.5547, "longitude": 120.9842, "distance_km": 0},
+    ],
+)
+def test_nearby_search_rejects_invalid_query_params(client: TestClient, params: dict[str, float]) -> None:
+    response = client.get("/addresses/nearby", params=params)
+
+    assert response.status_code == 422

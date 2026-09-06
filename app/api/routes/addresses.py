@@ -15,17 +15,22 @@ def get_address_service(db: Session = Depends(get_db)) -> AddressService:
     return AddressService(db)
 
 
-@router.get("", response_model=list[AddressRead])
+@router.get("", response_model=list[AddressRead], summary="List all addresses")
 def list_addresses(service: AddressService = Depends(get_address_service)):
     logger.debug("Listing addresses")
     return service.list_addresses()
 
 
-@router.get("/nearby", response_model=list[NearbyAddressRead])
+@router.get(
+    "/nearby",
+    response_model=list[NearbyAddressRead],
+    summary="Find addresses within a distance",
+    description="Returns addresses within the given radius in kilometers, sorted nearest first.",
+)
 def list_addresses_nearby(
-    latitude: float = Query(ge=-90, le=90),
-    longitude: float = Query(ge=-180, le=180),
-    distance_km: float = Query(gt=0),
+    latitude: float = Query(ge=-90, le=90, description="Reference latitude"),
+    longitude: float = Query(ge=-180, le=180, description="Reference longitude"),
+    distance_km: float = Query(gt=0, description="Search radius in kilometers"),
     service: AddressService = Depends(get_address_service),
 ):
     results = service.find_addresses_within_distance(
@@ -45,7 +50,7 @@ def list_addresses_nearby(
     return [_to_nearby_address_read(result) for result in results]
 
 
-@router.get("/{address_id}", response_model=AddressRead)
+@router.get("/{address_id}", response_model=AddressRead, summary="Get address by id")
 def get_address(address_id: int, service: AddressService = Depends(get_address_service)):
     address = service.get_address(address_id)
     if address is None:
@@ -55,14 +60,14 @@ def get_address(address_id: int, service: AddressService = Depends(get_address_s
     return address
 
 
-@router.post("", response_model=AddressRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=AddressRead, status_code=status.HTTP_201_CREATED, summary="Create address")
 def create_address(payload: AddressCreate, service: AddressService = Depends(get_address_service)):
     address = service.create_address(payload)
     logger.info("Created address", extra={"address_id": address.id, "city": address.city, "country": address.country})
     return address
 
 
-@router.patch("/{address_id}", response_model=AddressRead)
+@router.patch("/{address_id}", response_model=AddressRead, summary="Update address")
 def update_address(
     address_id: int,
     payload: AddressUpdate,
@@ -76,7 +81,7 @@ def update_address(
     return address
 
 
-@router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete address")
 def delete_address(address_id: int, service: AddressService = Depends(get_address_service)):
     deleted = service.delete_address(address_id)
     if not deleted:

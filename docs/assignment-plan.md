@@ -67,6 +67,8 @@ Notes:
 
 ## Step 4: Hardening
 
+Status: complete.
+
 Deliverables:
 
 - Add integration tests.
@@ -77,3 +79,9 @@ Acceptance criteria:
 
 - Core flows are tested.
 - The code stays simple and maintainable.
+
+Notes:
+
+- Added integration tests for not-found update/delete paths, payload validation failures, invalid nearby query params, and empty nearby search results.
+- Improved Swagger metadata with endpoint summaries and nearby parameter descriptions.
+- Preserved separation of concerns: route layer remains thin, service handles search composition, and distance logic stays in a dedicated service.
